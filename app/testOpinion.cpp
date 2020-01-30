@@ -6,9 +6,10 @@
 // main function
 int main(int argc, char** argv)
 {
-	opinion my_opinion;
-
 	int N = 6;
+
+	opinion my_opinion(N);
+
 	my_opinion.model_params.N = N;
 	my_opinion.model_params.sigma = 5.0;
 

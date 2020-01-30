@@ -12,7 +12,7 @@ class opinion : public model
 {
 
 public:
-  opinion(){};
+  opinion(int N):model(N){};
   virtual ~opinion(){};
 
   struct model_params_t model_params;
@@ -62,6 +62,9 @@ protected:
 	virtual mstate ModelInt(real const& t0, mstate const& X, real const& tf, int isTrace);
 
   static mstate static_Model(real const& t, opinion::mstate const& X, void *model);
+
+private:
+  opinion(){};
 };
 
 #endif //_OPINION_H_
