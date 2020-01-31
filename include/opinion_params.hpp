@@ -21,6 +21,13 @@ struct homotopy_params_t
 struct ode_params_t
 {
   int steps;
+  std::string output_file;
+};
+
+struct output_params_t
+{
+  std::string file_name;
+  std::ofstream file_stream;
 };
 
 #endif

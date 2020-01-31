@@ -1,24 +1,26 @@
+#ifndef _OPINION_H_
+#define _OPINION_H_
+
 #include "socp/model.hpp"
 #include "socp/map.hpp"
 
 #include "opinion_params.hpp"
-
-#ifndef _OPINION_H_
-#define _OPINION_H_
-
 
 /**************			opinion class			******************************/
 class opinion : public model
 {
 
 public:
-  opinion(int N):model(N){};
+  opinion(int N):model(N+1){};
   virtual ~opinion(){};
 
   struct model_params_t model_params;
   struct problem_params_t problem_params;
   struct homotopy_params_t homotopy_params;
   struct ode_params_t ode_params;
+  struct output_params_t output_params;
+
+  enum MODE {FIXED=0,FREE=1};
 
   mstate GetStates(mstate const& X) const;
   mstate GetCostates(mstate const& X) const;

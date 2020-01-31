@@ -44,12 +44,14 @@ void opinion::Split(mstate const& X, mstate *Y, mstate *P) const
 
 opinion::mstate opinion::Fuse(mstate const& Y, mstate const& P) const
 {
-  mstate X(2*this->model_params.N+2);
+  int N = this->model_params.N;
 
-  for (int i = 0; i <= this->model_params.N; i++)
+  mstate X(2*N+2);
+
+  for (int i = 0; i <= N; i++)
   {
     X[i] = Y[i];
-    X[i+this->model_params.N+1] = P[i];
+    X[i+N+1] = P[i];
   }
 
   return X;
