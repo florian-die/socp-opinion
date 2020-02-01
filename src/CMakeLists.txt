@@ -1,4 +1,4 @@
- add_library(opinion_model_lib STATIC opinion_model.cpp opinion_utils.cpp)
+ add_library(opinion_model_lib STATIC opinion_model.cpp opinion_utils.cpp opinion_functions.cpp)
 
  target_link_libraries(opinion_model_lib PRIVATE ${SOCP_LIBRARIES})
 

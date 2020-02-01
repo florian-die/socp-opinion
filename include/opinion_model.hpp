@@ -1,10 +1,10 @@
-#ifndef _OPINION_H_
-#define _OPINION_H_
-
 #include "socp/model.hpp"
 #include "socp/map.hpp"
 
 #include "opinion_params.hpp"
+
+#ifndef _OPINION_H_
+#define _OPINION_H_
 
 /**************			opinion class			******************************/
 class opinion : public model

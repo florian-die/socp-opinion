@@ -65,26 +65,27 @@ real opinion::Hamiltonian(real const& t, mstate const& X) const
   mstate dY = this->GetStates(this->Model(t,X));
   mstate P = this->GetCostates(X);
 
-  real H = 1.0 + u*u*this->homotopy_params.u/2.0;
-
-  // for (int i = 0; i <= this->model_params.N; i++)
-  // {
-  //   H += P[i]*dY[i];
-  // }
-
   int N = this->model_params.N;
 
-  mstate Y = this->GetStates(X);
+  // TODO : cost function ?
+  real H = 1.0 + u*u/this->homotopy_params.u/2.0;
 
-  H += - P[1]*opinion_functions::h(Y[1]);
-  H += - P[N]*opinion_functions::h(Y[N]);
+  for (int i = 0; i <= this->model_params.N; i++)
+  {
+    H += P[i]*dY[i];
+  }
+
+  // mstate Y = this->GetStates(X);
+  // H += - u*(P[1]+P[N]);
+  // H += - P[1]*opinion_functions::h(Y[1]);
+  // H += - P[N]*opinion_functions::h(Y[N]);
 
   return H;
 }
 
 opinion::mstate opinion::ModelInt(real const& t0, mstate const& X, real const& tf, int isTrace)
 {
-  real t = t0;							// time
+  real t = t0; // time
 	real dt = (tf-t0)/this->ode_params.steps;		// time step
 	mstate Xs = X;
 

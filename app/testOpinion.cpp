@@ -1,8 +1,10 @@
 #include "socp/shooting.hpp"
+#include "opinion_functions.hpp"
 #include "opinion_model.hpp"
 
 #include <vector>
 #include <iostream>
+#include <cmath>
 
 // main function
 int main(int argc, char** argv)
@@ -21,7 +23,7 @@ int main(int argc, char** argv)
 	my_opinion.homotopy_params.u = 1.0;
 	my_opinion.homotopy_params.h = 0.0;
 
-	my_opinion.ode_params.steps = 500;
+	my_opinion.ode_params.steps = 700;
 
 	my_opinion.output_params.file_name = "opinion_data.dat";
 
@@ -42,7 +44,7 @@ int main(int argc, char** argv)
 
 	// initial & final times
 	real ti = 0; // fixed
-	real tf = 20.0; // free
+	real tf = 17.0; // free
 
 	// initial opinions (fixed)
 	opinion::mstate Yi(N+1);
@@ -56,14 +58,27 @@ int main(int argc, char** argv)
 
 	// final opinions
 	opinion::mstate Yf(N+1,0.0);
-	Yf[0] = 12.0; // free
-	Yf[1] =	eta; // fixed
-	Yf[N] =	-eta; // fixed
+	// Yf[0] = 5.4; // free
+	Yf[1] =	-eta; // fixed
+	// Yf[2] =	-0.1; // free
+	// Yf[3] =	-0.1; // free
+	// Yf[4] =	-0.1; // free
+	// Yf[5] =	-0.1; // free
+	Yf[N] =	eta; // fixed
 
 	// initial costates (guess)
 	opinion::mstate Pi(N+1,0.0);
-	Pi[1] = 0.02;
-	Pi[N] = -0.01;
+	Pi[1] = -0.5;
+
+	// double a = -0.5;
+	// double b = - Pi[1] - opinion_functions::h(Yi[N]);
+	// double c = - Pi[1]*Pi[1] - Pi[1]*opinion_functions::h(Yi[1])+1;
+	// double d = b*b-4*a*c;
+	//
+	// Pi[N] = (-b-sqrt(d))/2/a;
+	// std::cout << "Pi[N] = " << Pi[N] << std::endl;
+
+	Pi[N] = 2.0;
 
 	// final costates (not used)
 	opinion::mstate Pf(N+1,0.0);
