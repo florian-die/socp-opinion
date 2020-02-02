@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include <time.h>
 
 // main function
 int main(int argc, char** argv)
