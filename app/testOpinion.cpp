@@ -93,9 +93,9 @@ int main(int argc, char** argv)
 	/* -------------- Solving initial problem---------------------------------- */
 
 	std::cout << "Solve OCP... ";
-	long int time1 = clock();
+	double time1 = clock();
 	int info = my_shooting.SolveOCP();
-	long int time2 = clock();
+	double time2 = clock();
 	double time = (double)(time2 - time1) / CLOCKS_PER_SEC;
 	std::cout << "Algo returned " << info << ", ";
 	std::cout << "Computing time : " << time << " secondes." << std::endl;
@@ -109,7 +109,7 @@ int main(int argc, char** argv)
 		time1 = clock();
 		info = my_shooting.SolveOCP(0.1, my_opinion.homotopy_params.u, 0.8);
 		time2 = clock();
-		time = (double)(time2 - time1) / CLOCKS_PER_SEC;
+		time = (time2 - time1) / CLOCKS_PER_SEC;
 	}
 
 	std::cout << "Algo returned " << info << ", ";
