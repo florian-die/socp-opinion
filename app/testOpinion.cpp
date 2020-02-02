@@ -106,7 +106,7 @@ int main(int argc, char** argv)
 
 	if (info != 1)
 	{
-		std::cout << "!! Opitimisation failed !!" << std::endl;
+		std::cout << "!! Optimisation failed !!" << std::endl;
 		return info;
 	}
 
@@ -122,7 +122,7 @@ int main(int argc, char** argv)
 
 	if (info != 1)
 	{
-		std::cout << "!! Opitimisation failed !!" << std::endl;
+		std::cout << "!! Optimisation failed !!" << std::endl;
 		return info;
 	}
 
