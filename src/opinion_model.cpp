@@ -5,6 +5,8 @@
 
 opinion::mstate opinion::Model(real const& t, mstate const& X) const
 {
+  using namespace opinion_functions;
+
   int N = this->model_params.N;
 
   // control computation
@@ -19,7 +21,7 @@ opinion::mstate opinion::Model(real const& t, mstate const& X) const
 
   for (int i = 1; i <= N; i++)
   {
-    dY[i] = - opinion_functions::h(Y[i]) - u;
+    dY[i] = - h(Y[i]) - u;
   }
 
   // costates dynamics
@@ -30,7 +32,7 @@ opinion::mstate opinion::Model(real const& t, mstate const& X) const
 
   for (int i = 1; i <= N; i++)
   {
-    dP[i] = P[i]*opinion_functions::dh(Y[i]);
+    dP[i] = P[i]*dh(Y[i]);
   }
 
   return this->Fuse(dY,dP);
@@ -42,11 +44,25 @@ opinion::mcontrol opinion::Control(real const& t, mstate const& X) const
 
   mstate P = this->GetCostates(X);
 
-  real u = (P[1]+P[this->model_params.N]) / this->homotopy_params.u;
+  real u = 0.0;
 
-  double sigma = this->model_params.sigma;
+  // control for quadric control norm cost function
+  if (this->homotopy_params.u > 0.0)
+  {
+    u = (P[1]+P[this->model_params.N]) / this->homotopy_params.u;
+  }
+
+  // control for time optimal formulation
+  if (this->homotopy_params.u == 0.0)
+  {
+    // if t < switching time
+    // u = sigma
+    // if t > switching_time
+    u = this->SingularControl(X);
+  }
 
   // saturation
+  double sigma = this->model_params.sigma;
   if (u > sigma || u < -sigma)
   {
     u = sigma * u / fabs(u);
@@ -55,6 +71,18 @@ opinion::mcontrol opinion::Control(real const& t, mstate const& X) const
   U[0] = u;
 
   return U;
+}
+
+real opinion::SingularControl(mstate const& X) const
+{
+  int N = this->model_params.N;
+
+  mstate Y = this->GetStates(X);
+
+  using namespace opinion_functions;
+
+  real u = ddh(Y[1])*h(Y[1]) - ddh(Y[N])*h(Y[N]);
+  u /= ddh(Y[N]) - ddh(Y[1]);
 }
 
 real opinion::Hamiltonian(real const& t, mstate const& X) const
@@ -67,18 +95,14 @@ real opinion::Hamiltonian(real const& t, mstate const& X) const
 
   int N = this->model_params.N;
 
-  // TODO : cost function ?
-  real H = 1.0 + u*u/this->homotopy_params.u/2.0;
+  // integral cost function part
+  real H = 1.0 + u*u*this->homotopy_params.u/2.0;
 
+  // system dynamics part
   for (int i = 0; i <= this->model_params.N; i++)
   {
     H += P[i]*dY[i];
   }
-
-  // mstate Y = this->GetStates(X);
-  // H += - u*(P[1]+P[N]);
-  // H += - P[1]*opinion_functions::h(Y[1]);
-  // H += - P[N]*opinion_functions::h(Y[N]);
 
   return H;
 }
@@ -92,7 +116,7 @@ opinion::mstate opinion::ModelInt(real const& t0, mstate const& X, real const& t
   if (isTrace)
   {
     this->output_params.file_stream.open(this->output_params.file_name.c_str(), std::ios::trunc);
-    Trace(t, Xs, this->output_params.file_stream);
+    this->Trace(t, Xs, this->output_params.file_stream);
   }
 
 	for (int i = 0; i < this->ode_params.steps; i++)
@@ -103,7 +127,7 @@ opinion::mstate opinion::ModelInt(real const& t0, mstate const& X, real const& t
 
     if (isTrace)
     {
-      Trace(t, Xs, this->output_params.file_stream);
+      this->Trace(t, Xs, this->output_params.file_stream);
     }
 	}
 

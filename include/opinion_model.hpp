@@ -44,6 +44,7 @@ protected:
 	* @return the control U as a control state
 	*/
 	virtual mcontrol Control(real const& t, mstate const& X) const;
+  real SingularControl(mstate const& X) const;
 
 	/**
 	* Hamiltonian of the vehicle
