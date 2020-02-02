@@ -23,7 +23,7 @@ int main(int argc, char** argv)
 	my_opinion.homotopy_params.u = 1.0;
 	my_opinion.homotopy_params.h = 0.0;
 
-	my_opinion.ode_params.steps = 700;
+	my_opinion.ode_params.steps = 200;
 
 	my_opinion.output_params.file_name = "opinion_data.dat";
 
@@ -93,12 +93,26 @@ int main(int argc, char** argv)
 
 	std::cout << "Solve OCP... ";
 	long int time1 = clock();
-	int info = my_shooting.SolveOCP(0.0);
+	int info = my_shooting.SolveOCP();
 	long int time2 = clock();
 	double time = (double)(time2 - time1) / CLOCKS_PER_SEC;
 	std::cout << "Algo returned " << info << ", ";
 	std::cout << "Computing time : " << time << " secondes." << std::endl;
 
+	/* -------------- Continuation on quadratic control cost ------------------ */
+
+	std::cout << "Continuation on parameter u... " << std::endl;
+
+	if (info==1)
+	{
+		time1 = clock();
+		info = my_shooting.SolveOCP(0.1, my_opinion.homotopy_params.u, 0.8);
+		time2 = clock();
+		time = (double)(time2 - time1) / CLOCKS_PER_SEC;
+	}
+
+	std::cout << "Algo returned " << info << ", ";
+	std::cout << "Computing time : " << time << " secondes." << std::endl;
 
 	/* -------------- Write solution in a file -------------------------------- */
 	my_shooting.Trace();
