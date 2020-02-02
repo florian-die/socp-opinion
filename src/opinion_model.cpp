@@ -55,10 +55,17 @@ opinion::mcontrol opinion::Control(real const& t, mstate const& X) const
   // control for time optimal formulation
   if (this->homotopy_params.u == 0.0)
   {
-    // if t < switching time
-    // u = sigma
-    // if t > switching_time
-    u = this->SingularControl(X);
+    double t1 = this->solution_params.switching_times[0];
+
+    if (t <= t1)
+    {
+      u = this->model_params.sigma;
+    }
+
+    if (t > t1)
+    {
+      u = this->SingularControl(X);
+    }
   }
 
   // saturation
@@ -83,6 +90,8 @@ real opinion::SingularControl(mstate const& X) const
 
   real u = ddh(Y[1])*h(Y[1]) - ddh(Y[N])*h(Y[N]);
   u /= ddh(Y[N]) - ddh(Y[1]);
+
+  return u;
 }
 
 real opinion::Hamiltonian(real const& t, mstate const& X) const
@@ -142,4 +151,17 @@ opinion::mstate opinion::ModelInt(real const& t0, mstate const& X, real const& t
 opinion::mstate opinion::static_Model(real const& t, opinion::mstate const& X, void *model)
 {
 	return static_cast<opinion*>(model)->Model(t, X);
+}
+
+void opinion::SwitchingTimesUpdate(std::vector<real> const& switchingTimes)
+{
+  if (!switchingTimes.empty())
+  {
+    this->solution_params.switching_times[0] = switchingTimes[0];
+  }
+}
+
+void opinion::SwitchingTimesFunction(real const& t, mstate const& X, real& fvec) const
+{
+  fvec = this->Hamiltonian(t, X);
 }

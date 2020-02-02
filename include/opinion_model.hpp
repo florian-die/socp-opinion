@@ -11,11 +11,17 @@ class opinion : public model
 {
 
 public:
-  opinion(int N):model(N+1){};
-  virtual ~opinion(){};
+	opinion(int N) :model(N + 1)
+	{
+		//this->params = new struct params_t;
+	};
+	virtual ~opinion() {};
+
+	//struct params_t* params;
 
   struct model_params_t model_params;
   struct problem_params_t problem_params;
+	struct solution_params_t solution_params;
   struct homotopy_params_t homotopy_params;
   struct ode_params_t ode_params;
   struct output_params_t output_params;
@@ -66,8 +72,16 @@ protected:
 
   static mstate static_Model(real const& t, opinion::mstate const& X, void *model);
 
+	virtual void SwitchingTimesUpdate(std::vector<real> const& switchingTimes);
+	virtual void SwitchingTimesFunction(real const& t, mstate const& X, real& fvec) const;
+
 private:
   opinion(){};
 };
+
+template <typename T> int sgn(T val) 
+{
+	return (T(0) < val) - (val < T(0));
+}
 
 #endif //_OPINION_H_
