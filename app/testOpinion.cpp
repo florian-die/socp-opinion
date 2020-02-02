@@ -114,7 +114,7 @@ int main(int argc, char** argv)
 
 	std::cout << "2) Continuation on parameter u... " << std::endl;
 	time1 = clock();
-	info = my_shooting.SolveOCP(0.1, my_opinion.homotopy_params.u, 0.-);
+	info = my_shooting.SolveOCP(0.1, my_opinion.homotopy_params.u, 0.6);
 	time2 = clock();
 	time = (time2 - time1) / CLOCKS_PER_SEC;
 	std::cout << "  - Algo returned " << info << std::endl;
