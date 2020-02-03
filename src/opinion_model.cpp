@@ -21,7 +21,17 @@ opinion::mstate opinion::Model(real const& t, mstate const& X) const
 
   for (int i = 1; i <= N; i++)
   {
+    // without interaction term
     dY[i] = - h(Y[i]) - u;
+
+    // interactions terms
+    if (this->homotopy_params.h > 0.0)
+    {
+      for(int k = 0; k <= N; k++)
+      {
+        dY[i] += h(Y[k]-Y[i]) * this->homotopy_params.h;
+      }
+    }
   }
 
   // costates dynamics
@@ -32,7 +42,20 @@ opinion::mstate opinion::Model(real const& t, mstate const& X) const
 
   for (int i = 1; i <= N; i++)
   {
+    // without interaction term
     dP[i] = P[i]*dh(Y[i]);
+
+    // interactions terms
+    if (this->homotopy_params.h > 0.0)
+    {
+      for(int k = 0; k <= N; k++)
+      {
+        dP[i] += P[i]*dh(Y[k]-Y[i]) * this->homotopy_params.h;
+
+        if(i != k)
+        dP[i] += - P[k]*dh(Y[k]-Y[i]) * this->homotopy_params.h;
+      }
+    }
   }
 
   return this->Fuse(dY,dP);
@@ -52,8 +75,8 @@ opinion::mcontrol opinion::Control(real const& t, mstate const& X) const
     u = (P[1]+P[this->model_params.N]) / this->homotopy_params.u;
   }
 
-  // control for time optimal formulation
-  if (this->homotopy_params.u == 0.0)
+  // control for time optimal formulation without interaction
+  if (this->homotopy_params.u == 0.0 && this->homotopy_params.h == 0.0)
   {
     double t1 = this->solution_params.switching_times[0];
 
