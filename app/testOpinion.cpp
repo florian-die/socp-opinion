@@ -31,7 +31,7 @@ int main(int argc, char** argv)
 	my_opinion.homotopy_params.u = 1.0;
 	my_opinion.homotopy_params.h = 0.0;
 
-	my_opinion.ode_params.steps = 1000;
+	my_opinion.ode_params.steps = 500;
 
 	my_opinion.output_params.file_name = "opinion_data.dat";
 
@@ -110,7 +110,7 @@ int main(int argc, char** argv)
 
 	std::cout << "2) Continuation on parameter u... " << std::endl;
 	time1 = clock();
-	info = my_shooting.SolveOCP(0.01, my_opinion.homotopy_params.u, 0.5);
+	info = my_shooting.SolveOCP(0.1, my_opinion.homotopy_params.u, 0.8);
 	time2 = clock();
 	time = (time2 - time1) / CLOCKS_PER_SEC;
 	std::cout << "  - Algo returned " << info << std::endl;
@@ -183,7 +183,7 @@ int main(int argc, char** argv)
 
 	std::cout << "  - Final opinions : ["
 						<< states[2][1] << "," << states[2][N] << "]"
-						<< " sec" << std::endl;
+						<< std::endl;
 
 	/* -------------- Write solution in a file -------------------------------- */
 	my_opinion.output_params.file_stream.open(my_opinion.output_params.file_name.c_str(), std::ios::trunc);
