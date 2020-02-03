@@ -89,7 +89,7 @@ real opinion::SingularControl(mstate const& X) const
   using namespace opinion_functions;
 
   real u = ddh(Y[1])*h(Y[1]) - ddh(Y[N])*h(Y[N]);
-  u /= ddh(Y[N]) - ddh(Y[1]);
+  u = u / (ddh(Y[N]) - ddh(Y[1]));
 
   return u;
 }
@@ -124,8 +124,9 @@ opinion::mstate opinion::ModelInt(real const& t0, mstate const& X, real const& t
 
   if (isTrace)
   {
-    this->output_params.file_stream.open(this->output_params.file_name.c_str(), std::ios::trunc);
+    this->output_params.file_stream.open(this->output_params.file_name.c_str(), std::ios::app);
     this->Trace(t, Xs, this->output_params.file_stream);
+    // this->output_params.file_stream.close();
   }
 
 	for (int i = 0; i < this->ode_params.steps; i++)
@@ -136,7 +137,9 @@ opinion::mstate opinion::ModelInt(real const& t0, mstate const& X, real const& t
 
     if (isTrace)
     {
+      // this->output_params.file_stream.open(this->output_params.file_name.c_str(), std::ios::app);
       this->Trace(t, Xs, this->output_params.file_stream);
+      // this->output_params.file_stream.close();
     }
 	}
 
@@ -155,6 +158,13 @@ opinion::mstate opinion::static_Model(real const& t, opinion::mstate const& X, v
 
 void opinion::SwitchingTimesUpdate(std::vector<real> const& switchingTimes)
 {
+  // this->solution_params.switching_times.resize(switchingTimes.size());
+	// for (int i = 0; i<switchingTimes.size(); i++)
+  // {
+  //   this->solution_params.switching_times[i] = switchingTimes[i];
+  // }
+
+
   if (!switchingTimes.empty())
   {
     this->solution_params.switching_times[0] = switchingTimes[0];
@@ -163,5 +173,7 @@ void opinion::SwitchingTimesUpdate(std::vector<real> const& switchingTimes)
 
 void opinion::SwitchingTimesFunction(real const& t, mstate const& X, real& fvec) const
 {
-  fvec = this->Hamiltonian(t, X);
+  mstate P = this->GetCostates(X);
+
+  fvec = P[1] + P[this->model_params.N];
 }

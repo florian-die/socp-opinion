@@ -31,7 +31,7 @@ int main(int argc, char** argv)
 	my_opinion.homotopy_params.u = 1.0;
 	my_opinion.homotopy_params.h = 0.0;
 
-	my_opinion.ode_params.steps = 100;
+	my_opinion.ode_params.steps = 1000;
 
 	my_opinion.output_params.file_name = "opinion_data.dat";
 
@@ -110,7 +110,7 @@ int main(int argc, char** argv)
 
 	std::cout << "2) Continuation on parameter u... " << std::endl;
 	time1 = clock();
-	info = my_shooting.SolveOCP(0.1, my_opinion.homotopy_params.u, 0.9);
+	info = my_shooting.SolveOCP(0.01, my_opinion.homotopy_params.u, 0.5);
 	time2 = clock();
 	time = (time2 - time1) / CLOCKS_PER_SEC;
 	std::cout << "  - Algo returned " << info << std::endl;
@@ -122,39 +122,44 @@ int main(int argc, char** argv)
 		return info;
 	}
 
-	my_shooting.Trace();
-
 	/* -------------- Introducing switching times ------------------ */
 
-	// set modes 
-	std::vector<int> mode_t(nMulti+1, opinion::MODE::FREE);
-	mode_t[0] = opinion::MODE::FIXED;
-
-	std::vector< std::vector<int> > mode_Y(nMulti+1);
-	mode_Y[0] = std::vector<int>(M, opinion::MODE::FIXED);
-	mode_Y[1] = std::vector<int>(M, 2);
-	mode_Y[nMulti] = mode_Yf;
-	my_shooting.SetMode(mode_t, mode_Y);
+	// removing cost on control norm
+	my_opinion.homotopy_params.u = 0.0;
 
 	// recover previous solution
 	std::vector<real> times(nMulti + 1);
 	std::vector<model::mstate> states(nMulti + 1);
 	my_shooting.GetSolution(times, states);
+	tf = times[1];
 
 	// switching time (guessed from observation)
 	double t1 = 0.8;
-	my_opinion.solution_params.switching_times = std::vector<double>{ t1 };
+	my_opinion.solution_params.switching_times[0] = t1;
 	times[1] = t1;
+	times[2] = tf;
 
 	states[0] = my_shooting.Move(times[0]);
 	states[1] = my_shooting.Move(times[1]);
 	states[2] = my_shooting.Move(times[2]);
 
 	my_shooting.InitShooting(times, states);
+	// NB : set modes after init, not before
 
-	my_opinion.homotopy_params.u = 0.0;
+	// set time modes
+	std::vector<int> mode_t(nMulti+1, opinion::MODE::FREE);
+	mode_t[0] = opinion::MODE::FIXED;
 
-	std::cout << "3) Introducing switching time " << std::endl;
+	// set opinion modes
+	std::vector< std::vector<int> > mode_Y(nMulti+1);
+	mode_Y[0] = std::vector<int>(M, opinion::MODE::FIXED);
+	mode_Y[1] = std::vector<int>(M, 2);
+	mode_Y[nMulti] = mode_Yf;
+
+	my_shooting.SetMode(mode_t, mode_Y);
+
+	// solving
+	std::cout << "3) Introducing switching time" << std::endl;
 	time1 = clock();
 	info = my_shooting.SolveOCP();
 	time2 = clock();
@@ -168,8 +173,23 @@ int main(int argc, char** argv)
 		return info;
 	}
 
+	std::cout << "  - Switching time : "
+						<< my_opinion.solution_params.switching_times[0]
+						<< " sec" << std::endl;
+
+	my_shooting.GetSolution(times, states);
+
+	std::cout << "  - Final time : " << times[2] << " sec" << std::endl;
+
+	std::cout << "  - Final opinions : ["
+						<< states[2][1] << "," << states[2][N] << "]"
+						<< " sec" << std::endl;
+
 	/* -------------- Write solution in a file -------------------------------- */
+	my_opinion.output_params.file_stream.open(my_opinion.output_params.file_name.c_str(), std::ios::trunc);
+	my_opinion.output_params.file_stream.close();
 	my_shooting.Trace();
+
 
 	return 0;
 }
