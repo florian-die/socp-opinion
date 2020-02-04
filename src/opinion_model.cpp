@@ -82,7 +82,9 @@ opinion::mcontrol opinion::Control(real const& t, mstate const& X) const
 
     if (t <= t1)
     {
-      u = this->model_params.sigma;
+      real phi = (P[1]+P[this->model_params.N]);
+
+      u = this->model_params.sigma * phi / fabs(phi);
     }
 
     if (t > t1)
