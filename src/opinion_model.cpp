@@ -5,13 +5,18 @@
 
 opinion::mstate opinion::Model(real const& t, mstate const& X) const
 {
+    // control computation
+    mcontrol U = this->Control(t,X);
+    real u = U[0];
+
+    return this->Dynamics(X,u);
+}
+
+opinion::mstate opinion::Dynamics(mstate const& X, real u) const
+{
   using namespace opinion_functions;
 
   int N = this->model_params.N;
-
-  // control computation
-  mcontrol U = this->Control(t,X);
-  real u = U[0];
 
   // opinions dynamics
   mstate Y = this->GetStates(X);
@@ -42,7 +47,7 @@ opinion::mstate opinion::Model(real const& t, mstate const& X) const
 
   for (int i = 1; i <= N; i++)
   {
-    // without interaction term
+    // without interaction term (= leader influence)
     dP[i] = P[i]*dh(Y[i]);
 
     // interactions terms
@@ -53,7 +58,9 @@ opinion::mstate opinion::Model(real const& t, mstate const& X) const
         dP[i] += P[i]*dh(Y[k]-Y[i]) * this->homotopy_params.h;
 
         if(i != k)
-        dP[i] += - P[k]*dh(Y[k]-Y[i]) * this->homotopy_params.h;
+        {
+          dP[i] += - P[k]*dh(Y[k]-Y[i]) * this->homotopy_params.h;
+        }
       }
     }
   }
@@ -75,11 +82,12 @@ opinion::mcontrol opinion::Control(real const& t, mstate const& X) const
     u = (P[1]+P[this->model_params.N]) / this->homotopy_params.u;
   }
 
-  // control for time optimal formulation without interaction
-  if (this->homotopy_params.u == 0.0 && this->homotopy_params.h == 0.0)
+  // control for time optimal formulation
+  if (this->homotopy_params.u == 0.0 )
   {
     double t1 = this->solution_params.switching_times[0];
 
+    // staturated control during first phase
     if (t <= t1)
     {
       real phi = (P[1]+P[this->model_params.N]);
@@ -87,9 +95,20 @@ opinion::mcontrol opinion::Control(real const& t, mstate const& X) const
       u = this->model_params.sigma * phi / fabs(phi);
     }
 
+    // singular control during second phase
     if (t > t1)
     {
-      u = this->SingularControl(X);
+      // without interaction
+      if (this->homotopy_params.h == 0.0)
+      {
+        u = this->SingularControl(X);
+      }
+
+      // with interactions
+      if (this->homotopy_params.h > 0.0)
+      {
+        u = this->SingularControlInteractions(X);
+      }
     }
   }
 
@@ -119,12 +138,57 @@ real opinion::SingularControl(mstate const& X) const
   return u;
 }
 
+real opinion::SingularControlInteractions(mstate const& X) const
+{
+  using namespace opinion_functions;
+
+  int N = this->model_params.N;
+
+  mstate Y = this->GetStates(X);
+  mstate P = this->GetCostates(X);
+
+  mstate dX = this->Dynamics(X,0.0); // control set to zero
+  mstate dY = this->GetStates(dX);
+  mstate dP = this->GetCostates(dX);
+
+  real u = 0.0; // numerator
+  real v = 0.0; // denominator
+
+  for (int i = 1; i <= N; i++)
+  {
+    // leader influence terms
+    u += dP[i]*dh(Y[i]);
+    u += - P[i]*ddh(Y[i])*h(Y[i]);
+
+    // interactions terms
+    for (int k = 1 ; k <= N; k++)
+    {
+      if (k != i)
+      {
+        u += dP[i]*dh(Y[k]-Y[i]) * this->homotopy_params.h;
+        u += - dP[k]*dh(Y[i]-Y[k]) * this->homotopy_params.h;
+      }
+
+      u += P[i]*ddh(Y[i])*h(Y[k]-Y[i]) * this->homotopy_params.h;
+      u += P[i]*(dY[k]-dY[i])*ddh(Y[k]-Y[i]) * this->homotopy_params.h;
+      u += - dP[k]*ddh(Y[i]-Y[k])*(dY[i]-dY[k]) * this->homotopy_params.h;
+    }
+
+    // denominator
+    v += P[i]*ddh(Y[i]);
+  }
+
+  u = u / v;
+
+  return u;
+}
+
 real opinion::Hamiltonian(real const& t, mstate const& X) const
 {
   mcontrol U = this->Control(t,X);
   real u = U[0];
 
-  mstate dY = this->GetStates(this->Model(t,X));
+  mstate dY = this->GetStates(this->Dynamics(X,u));
   mstate P = this->GetCostates(X);
 
   int N = this->model_params.N;
@@ -200,5 +264,32 @@ void opinion::SwitchingTimesFunction(real const& t, mstate const& X, real& fvec)
 {
   mstate P = this->GetCostates(X);
 
-  fvec = P[1] + P[this->model_params.N];
+  fvec = this->SwitchingFunction(X);
+}
+
+real opinion::SwitchingFunction(mstate const& X) const
+{
+  mstate P = this->GetCostates(X);
+
+  real phi = 0.0;
+
+  int N = this->model_params.N;
+
+  // without interactions
+  if (this->homotopy_params.h == 0.0)
+  {
+    phi = P[1] + P[N];
+    // intermediary costates equal zero
+  }
+
+  // with interactions
+  if(this->homotopy_params.h > 0.0)
+  {
+    for (int i = 1; i <= N; i++)
+    {
+      phi += P[i];
+    }
+  }
+
+  return phi;
 }

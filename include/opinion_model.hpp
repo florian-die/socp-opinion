@@ -42,6 +42,7 @@ protected:
 	* @return dX/dt as a model state
 	*/
 	virtual mstate Model(real const& t, mstate const& X) const;
+	mstate Dynamics(mstate const& X, real u) const;
 
 	/**
 	* Control model of the vehicle : U = Control(t, X)
@@ -51,6 +52,7 @@ protected:
 	*/
 	virtual mcontrol Control(real const& t, mstate const& X) const;
   real SingularControl(mstate const& X) const;
+	real SingularControlInteractions(mstate const& X) const;
 
 	/**
 	* Hamiltonian of the vehicle
@@ -74,12 +76,14 @@ protected:
 
 	virtual void SwitchingTimesUpdate(std::vector<real> const& switchingTimes);
 	virtual void SwitchingTimesFunction(real const& t, mstate const& X, real& fvec) const;
+	real SwitchingFunction(mstate const& X) const;
 
 private:
   opinion(){};
 };
 
-template <typename T> int sgn(T val) 
+template <typename T>
+int sgn(T val)
 {
 	return (T(0) < val) - (val < T(0));
 }
