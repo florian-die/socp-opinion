@@ -27,6 +27,7 @@ p0 = data[:,n+1] # leader costate
 pi = data[:,n+2:2*n+1] # agents costates
 p1 = pi[:,0]
 pn = pi[:,-1]
+phi = np.sum(pi,axis=1)
 
 
 """ parameters """
@@ -77,10 +78,10 @@ ax2.legend(framealpha=1,loc="upper right")
 ax3 = fig.add_subplot(gs[2, 0])
 
 ax3.plot(t,p1,'c',label='p1')
-ax3.plot(t,-p1,'c--',label='-p1')
-ax3.plot(t,pn,'b',label='pn')
-ax3.plot(t,-pn,'b--',label='-pn')
-ax3.plot(t,p1+pn,'r',label='p1+pn')
+ax3.plot(t,pn,'g',label='pn')
+ax3.plot(t,pi[:,1],'b',label='pi')
+ax3.plot(t,pi[:,1:-1],'b')
+ax3.plot(t,phi,'r--',label='phi')
 
 ax3.set(xlabel='time')
 ax3.set(ylabel='costate')

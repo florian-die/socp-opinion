@@ -19,10 +19,10 @@ opinion::mstate opinion::Dynamics(mstate const& X, real u) const
   int N = this->model_params.N;
 
   // opinions dynamics
-  mstate Y = this->GetStates(X);
-
   mstate dY(N+1);
-  dY[0] = u;
+  dY[0] = u; // leader
+
+  mstate Y = this->GetStates(X);
 
   for (int i = 1; i <= N; i++)
   {
@@ -32,7 +32,7 @@ opinion::mstate opinion::Dynamics(mstate const& X, real u) const
     // interactions terms
     if (this->homotopy_params.h > 0.0)
     {
-      for(int k = 0; k <= N; k++)
+      for(int k = 1; k <= N; k++)
       {
         dY[i] += h(Y[k]-Y[i]) * this->homotopy_params.h;
       }
@@ -40,10 +40,10 @@ opinion::mstate opinion::Dynamics(mstate const& X, real u) const
   }
 
   // costates dynamics
-  mstate P = this->GetCostates(X);
-
   mstate dP(N+1);
-  dP[0] = 0.0;
+  dP[0] = 0.0; // leader
+
+  mstate P = this->GetCostates(X);
 
   for (int i = 1; i <= N; i++)
   {
@@ -53,7 +53,7 @@ opinion::mstate opinion::Dynamics(mstate const& X, real u) const
     // interactions terms
     if (this->homotopy_params.h > 0.0)
     {
-      for(int k = 0; k <= N; k++)
+      for(int k = 1; k <= N; k++)
       {
         dP[i] += P[i]*dh(Y[k]-Y[i]) * this->homotopy_params.h;
 
@@ -79,7 +79,7 @@ opinion::mcontrol opinion::Control(real const& t, mstate const& X) const
   // control for quadric control norm cost function
   if (this->homotopy_params.u > 0.0)
   {
-    u = (P[1]+P[this->model_params.N]) / this->homotopy_params.u;
+    u = this->SwitchingFunction(X) / this->homotopy_params.u;
   }
 
   // control for time optimal formulation
@@ -90,9 +90,9 @@ opinion::mcontrol opinion::Control(real const& t, mstate const& X) const
     // staturated control during first phase
     if (t <= t1)
     {
-      real phi = (P[1]+P[this->model_params.N]);
+      real phi = this->SwitchingFunction(X);
 
-      u = this->model_params.sigma * phi / fabs(phi);
+      u = this->model_params.sigma * sgn(phi);
     }
 
     // singular control during second phase
@@ -116,7 +116,7 @@ opinion::mcontrol opinion::Control(real const& t, mstate const& X) const
   double sigma = this->model_params.sigma;
   if (u > sigma || u < -sigma)
   {
-    u = sigma * u / fabs(u);
+    u = sigma * sgn(u);
   }
 
   U[0] = u;
@@ -197,7 +197,7 @@ real opinion::Hamiltonian(real const& t, mstate const& X) const
   real H = 1.0 + u*u*this->homotopy_params.u/2.0;
 
   // system dynamics part
-  for (int i = 0; i <= this->model_params.N; i++)
+  for (int i = 1; i <= this->model_params.N; i++)
   {
     H += P[i]*dY[i];
   }
@@ -262,8 +262,6 @@ void opinion::SwitchingTimesUpdate(std::vector<real> const& switchingTimes)
 
 void opinion::SwitchingTimesFunction(real const& t, mstate const& X, real& fvec) const
 {
-  mstate P = this->GetCostates(X);
-
   fvec = this->SwitchingFunction(X);
 }
 
