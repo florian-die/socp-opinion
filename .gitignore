@@ -1,1 +1,8 @@
 build/
+
+*.x
+*.png
+*.pdf
+*.pyc
+*.dat
+*.csv
