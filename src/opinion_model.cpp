@@ -195,9 +195,17 @@ real opinion::Hamiltonian(real const& t, mstate const& X) const
   real H = 1.0 + u*u*this->homotopy_params.u/2.0;
 
   // system dynamics part
-  for (int i = 1; i <= this->model_params.N; i++)
+  if (this->homotopy_params.h == 0.0)
   {
-    H += P[i]*dY[i];
+    H += P[1]*dY[1] + P[N]*dY[N];
+  }
+
+  if(this->homotopy_params.h > 0.0)
+  {
+    for (int i = 1; i <= this->model_params.N; i++)
+    {
+      H += P[i]*dY[i];
+    }
   }
 
   return H;
