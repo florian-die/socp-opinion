@@ -32,13 +32,13 @@ int main(int argc, char** argv)
 	my_opinion.homotopy_params.u = 1.0;
 	my_opinion.homotopy_params.h = 0.0;
 
-	my_opinion.ode_params.steps = 1000;
+	my_opinion.ode_params.steps = 200;
 
 	my_opinion.output_params.file_name = "opinion_data.dat";
 
 	/* -------------- Initialisation ------------------------------------------ */
 
-	int nMulti = 2;
+	int nMulti = 1;
 	int nThread = 1;
 
 	shooting my_shooting(my_opinion, nMulti, nThread);
@@ -119,50 +119,50 @@ int main(int argc, char** argv)
 
 	/* -------------- Continuation on interactions ----------------------------- */
 
-	// std::cout << "2) Continuation on interactions... " << std::endl;
-	// time1 = clock();
-	// info = my_shooting.SolveOCP(0.01, my_opinion.homotopy_params.h, 0.3);
-	// time2 = clock();
-	// time = (time2 - time1) / CLOCKS_PER_SEC;
-	// std::cout << "  - Algo returned " << info << std::endl;
-	// std::cout << "  - Computing time : " << time << " sec"
-	// 					<< std::endl << std::endl ;
-	//
-	// if (info != 1)
-	// {
-	// 	std::cout << "!! Optimisation failed !!" << std::endl;
-	// 	return info;
-	// }
-
-	/* -------------- Continuation on quadratic control cost ------------------ */
-
-	std::cout << "2) Continuation on quadratic control cost... " << std::endl;
-
-	double step = 0.005;
-	double end = 0.30;
-
-	if (argc == 3)
-	{
-		step = strtod(argv[1],NULL);
-		end = strtod(argv[2],NULL);
-	}
-
-	std::cout << "  - Continuation from " << my_opinion.homotopy_params.u
-						<< " to " << end << " by " << step*100.0 << "% steps" << std::endl;
-
+	std::cout << "2) Continuation on interactions... " << std::endl;
 	time1 = clock();
-	info = my_shooting.SolveOCP(step, my_opinion.homotopy_params.u, end);
+	info = my_shooting.SolveOCP(0.1, my_opinion.homotopy_params.h, 0.2);
 	time2 = clock();
 	time = (time2 - time1) / CLOCKS_PER_SEC;
 	std::cout << "  - Algo returned " << info << std::endl;
-	std::cout << "  - Computing time : " << time << " sec" << std::endl;
-	std::cout << std::endl;
+	std::cout << "  - Computing time : " << time << " sec"
+						<< std::endl << std::endl ;
 
 	if (info != 1)
 	{
 		std::cout << "!! Optimisation failed !!" << std::endl;
 		return info;
 	}
+
+	/* -------------- Continuation on quadratic control cost ------------------ */
+
+	// std::cout << "2) Continuation on quadratic control cost... " << std::endl;
+	//
+	// double step = 0.1;
+	// double end = 0.5;
+	//
+	// if (argc == 3)
+	// {
+	// 	step = strtod(argv[1],NULL);
+	// 	end = strtod(argv[2],NULL);
+	// }
+	//
+	// std::cout << "  - Continuation from " << my_opinion.homotopy_params.u
+	// 					<< " to " << end << " by " << step*100.0 << "% steps" << std::endl;
+	//
+	// time1 = clock();
+	// info = my_shooting.SolveOCP(step, my_opinion.homotopy_params.u, end);
+	// time2 = clock();
+	// time = (time2 - time1) / CLOCKS_PER_SEC;
+	// std::cout << "  - Algo returned " << info << std::endl;
+	// std::cout << "  - Computing time : " << time << " sec" << std::endl;
+	// std::cout << std::endl;
+	//
+	// if (info != 1)
+	// {
+	// 	std::cout << "!! Optimisation failed !!" << std::endl;
+	// 	return info;
+	// }
 
 	/* -------------- Introducing switching times ------------------ */
 

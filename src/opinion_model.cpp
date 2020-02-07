@@ -55,11 +55,9 @@ opinion::mstate opinion::Dynamics(mstate const& X, real u) const
     {
       for(int k = 1; k <= N; k++)
       {
-        dP[i] += P[i]*dh(Y[k]-Y[i]) * this->homotopy_params.h;
-
         if(i != k)
         {
-          dP[i] += - P[k]*dh(Y[k]-Y[i]) * this->homotopy_params.h;
+          dP[i] += (P[k] - P[i])*dh(Y[k]-Y[i]) * this->homotopy_params.h;
         }
       }
     }
@@ -114,7 +112,7 @@ opinion::mcontrol opinion::Control(real const& t, mstate const& X) const
 
   // saturation
   double sigma = this->model_params.sigma;
-  if (u > sigma || u < -sigma)
+  if (u < -sigma || u > sigma)
   {
     u = sigma * sgn(u);
   }
@@ -211,31 +209,42 @@ opinion::mstate opinion::ModelInt(real const& t0, mstate const& X, real const& t
 	real dt = (tf-t0)/this->ode_params.steps;		// time step
 	mstate Xs = X;
 
-  if (isTrace)
-  {
-    this->output_params.file_stream.open(this->output_params.file_name.c_str(), std::ios::app);
-    this->Trace(t, Xs, this->output_params.file_stream);
-    // this->output_params.file_stream.close();
-  }
+  std::stringstream ss;
 
-	for (int i = 0; i < this->ode_params.steps; i++)
-  {
-		// Solve ODE
-		Xs = odeTools::RK4(t, Xs, dt, &static_Model, (void*) this);
-		t += dt;
+  // if (isTrace)
+  // {
+  //   this->output_params.file_stream.open(this->output_params.file_name.c_str(), std::ios::app);
+  //   this->Trace(t, Xs, this->output_params.file_stream);
+  //   this->output_params.file_stream.close();
+  // }
+
+	// for (int i = 0; i < this->ode_params.steps; i++)
+  // {
+	// 	Solve ODE
+  //
+	// 	Xs = odeTools::RK4(t, Xs, dt, &static_Model, (void*) this);
+	// 	t += dt;
 
     if (isTrace)
     {
       // this->output_params.file_stream.open(this->output_params.file_name.c_str(), std::ios::app);
-      this->Trace(t, Xs, this->output_params.file_stream);
-      // this->output_params.file_stream.close();
-    }
-	}
+      // this->Trace(t, Xs, this->output_params.file_stream);
 
-  if (isTrace)
-  {
-    this->output_params.file_stream.close();
-  }
+      this->output_params.file_stream.open(this->output_params.file_name.c_str(), std::ios::app);
+      integrate(modelStruct(this), Xs, t0, tf, dt, observerStruct(this, ss));
+      this->output_params.file_stream << ss.str();
+      this->output_params.file_stream.close();
+    }
+    else
+    {
+      integrate(modelStruct(this), Xs, t0, tf, dt);
+    }
+	// }
+
+  // if (isTrace)
+  // {
+  //   this->output_params.file_stream.close();
+  // }
 
 	return Xs;
 }
@@ -247,17 +256,17 @@ opinion::mstate opinion::static_Model(real const& t, opinion::mstate const& X, v
 
 void opinion::SwitchingTimesUpdate(std::vector<real> const& switchingTimes)
 {
-  // this->solution_params.switching_times.resize(switchingTimes.size());
-	// for (int i = 0; i<switchingTimes.size(); i++)
-  // {
-  //   this->solution_params.switching_times[i] = switchingTimes[i];
-  // }
-
-
-  if (!switchingTimes.empty())
+  this->solution_params.switching_times.resize(switchingTimes.size());
+	for (int i = 0; i<switchingTimes.size(); i++)
   {
-    this->solution_params.switching_times[0] = switchingTimes[0];
+    this->solution_params.switching_times[i] = switchingTimes[i];
   }
+
+
+  // if (!switchingTimes.empty())
+  // {
+  //   this->solution_params.switching_times[0] = switchingTimes[0];
+  // }
 }
 
 void opinion::SwitchingTimesFunction(real const& t, mstate const& X, real& fvec) const
