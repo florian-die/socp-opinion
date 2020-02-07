@@ -1,4 +1,4 @@
- add_executable(app_opinion testOpinion.cpp)
+ add_executable(app_opinion main_app.cpp)
 
  target_link_libraries(app_opinion PRIVATE opinion_model_lib ${SOCP_LIBRARIES})
 
